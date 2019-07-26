@@ -1,12 +1,36 @@
+import os
 import htmltag
 
 try:
-    from distutils.core import setup
-except ImportError:
     from setuptools import setup
+    from setuptools import Command
+except ImportError:
+    from distutils.core import setup
+    from distutils.cmd import Command
+    
+# https://pyscaffold.org/en/latest/_modules/pyscaffold/integration.html
+def build_cmd_docs():
+    """Return Sphinx's BuildDoc if available otherwise a dummy command
 
-from sphinx.setup_command import BuildDoc
-cmdclass = {'build_sphinx': BuildDoc}
+    Returns:
+        :obj:`~distutils.cmd.Command`: command object
+    """
+    try:
+        from sphinx.setup_command import BuildDoc
+    except ImportError:
+        class NoSphinx(Command):
+            user_options = []
+
+            def initialize_options(self):
+                raise RuntimeError("Sphinx documentation is not installed, "
+                                   "run: pip install sphinx")
+
+        return NoSphinx
+    else:
+        return BuildDoc
+
+
+cmdclass = {'build_sphinx': build_cmd_docs()}
 
 setup(
     name="htmltag",
